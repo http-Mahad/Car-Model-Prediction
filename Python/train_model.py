@@ -13,7 +13,6 @@ import sys
 from torchvision.models import ResNet18_Weights
 import time
 
-# Read the MATLAB data files
 def read_mat_file(mat_file_path):
     try:
         data = scipy.io.loadmat(mat_file_path)
@@ -56,7 +55,6 @@ class CarDataset(Dataset):
             return image, class_id
         except Exception as e:
             print(f"Error loading image {img_path}: {str(e)}")
-            # Return a zero tensor and the first class as fallback
             return torch.zeros((3, 224, 224)), 0
 
 def train_model(model, train_loader, criterion, optimizer, num_epochs=10, device='cpu', checkpoint_dir='checkpoints'):
@@ -67,7 +65,6 @@ def train_model(model, train_loader, criterion, optimizer, num_epochs=10, device
     best_acc = 0.0
     start_epoch = 0
     
-    # Load checkpoint if exists
     checkpoint_path = os.path.join(checkpoint_dir, 'latest_checkpoint.pth')
     if os.path.exists(checkpoint_path):
         checkpoint = torch.load(checkpoint_path)
@@ -101,13 +98,11 @@ def train_model(model, train_loader, criterion, optimizer, num_epochs=10, device
                     total += labels.size(0)
                     correct += predicted.eq(labels).sum().item()
                     
-                    # Update progress bar
                     progress_bar.set_postfix({
                         'loss': f'{running_loss/(batch_idx+1):.4f}',
                         'acc': f'{100.*correct/total:.2f}%'
                     })
                     
-                    # Save checkpoint every 100 batches
                     if (batch_idx + 1) % 100 == 0:
                         torch.save({
                             'epoch': epoch,
@@ -129,7 +124,6 @@ def train_model(model, train_loader, criterion, optimizer, num_epochs=10, device
             
             print(f'\nEpoch {epoch+1}: Loss = {epoch_loss:.4f}, Accuracy = {epoch_acc:.2f}%, Time = {epoch_time:.2f}s')
             
-            # Save best model
             if epoch_acc > best_acc:
                 best_acc = epoch_acc
                 torch.save({
@@ -158,26 +152,21 @@ def train_model(model, train_loader, criterion, optimizer, num_epochs=10, device
 
 def main():
     try:
-        # Set device
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         print(f"Using device: {device}")
         
-        # Dataset paths
         train_mat = 'cars_train_annos.mat'
         train_dir = 'cars_train/cars_train'
         
-        # Verify paths exist
         if not os.path.exists(train_mat):
             raise FileNotFoundError(f"Training annotations file not found: {train_mat}")
         if not os.path.exists(train_dir):
             raise FileNotFoundError(f"Training images directory not found: {train_dir}")
         
-        # Create dataset and dataloader
         print("Initializing dataset...")
         dataset = CarDataset(train_mat, train_dir)
         
-        # Use smaller batch size and fewer workers for CPU
-        batch_size = 8  # Reduced from 16
+        batch_size = 8  
         num_workers = 0 if device == 'cpu' else 2
         
         train_loader = DataLoader(
@@ -188,17 +177,14 @@ def main():
             pin_memory=True if device == 'cuda' else False
         )
         
-        # Load pre-trained ResNet18 model (lighter than ResNet50)
         print("Loading pre-trained ResNet18 model...")
         model = models.resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
-        num_classes = 196  # Number of car classes
+        num_classes = 196  
         model.fc = nn.Linear(model.fc.in_features, num_classes)
         
-        # Loss function and optimizer with lower learning rate
         criterion = nn.CrossEntropyLoss()
-        optimizer = optim.Adam(model.parameters(), lr=0.0001)  # Reduced from 0.001
+        optimizer = optim.Adam(model.parameters(), lr=0.0001)  
         
-        # Train the model
         print("Starting training...")
         print(f"Training with batch size: {batch_size}, workers: {num_workers}")
         model = train_model(model, train_loader, criterion, optimizer, num_epochs=10, device=device)
