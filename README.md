@@ -1,6 +1,6 @@
 # 🚗 Car Model Prediction using Deep Learning & MERN Stack
 
-![Car AI](https://img.freepik.com/free-vector/ai-artificial-intelligence-car-diagnostics-futuristic-technology_33099-2266.jpg?w=1380&t=st=1698652157~exp=1698652757~hmac=7433abf1fa62e7f83516bbd2e7e0c88d9ae23ee8eb4712e9d0fd8b48c845a0de)
+
 
 ## 📌 Project Overview
 
